@@ -14,16 +14,16 @@ fi
 chmod 600 /root/.ssh/* 2>/dev/null || true
 
 # 4. Map the custom key configuration route for GitHub connections
-echo -e "Host github.com\n  IdentityFile /root/.ssh/key\n  IdentitiesOnly yes" > /root/.ssh/config
+echo -e "Host github.com\n  IdentityFile /root/.ssh/key_name\n  IdentitiesOnly yes" > /root/.ssh/config
 
 # 5. Fire up the background SSH Agent explicitly for this environment session
 eval "$(ssh-agent -s)"
 
 # 6. Check if the key file explicitly exists before registering it into active memory
-if [ -f /root/.ssh/key ]; then
-    ssh-add /root/.ssh/key 2>/dev/null
+if [ -f /root/.ssh/key_name ]; then
+    ssh-add /root/.ssh/key_name 2>/dev/null
 else
-    echo "⚠️ File check: /root/.ssh/key not found."
+    echo "⚠️ File check: /root/.ssh/key_name not found."
 fi
 
 # 7. Print out diagnostic check to screen
