@@ -25,7 +25,9 @@ RUN mkdir -p -m 0700 /root/.ssh && \
 
 # Copy our new operational script into the container architecture
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
+
+COPY auth.json /workspace/.opencode_data/share/opencode/auth.json
 
 # Register the entrypoint script controller
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

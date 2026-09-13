@@ -1,0 +1,6 @@
+{
+  "provider": {
+    "type": "api",
+    "key": "sk-somekey"
+  }
+}
