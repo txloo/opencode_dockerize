@@ -32,8 +32,23 @@ if (Test-Path $SshDir) {
 
 # 4. Handle persistent OpenCode Session directory inside your PWD
 $LocalDataDir = Join-Path $PWD ".opencode_data"
+
 if (-not (Test-Path $LocalDataDir)) {
     New-Item -ItemType Directory -Force -Path $LocalDataDir | Out-Null
+}
+
+$TargetAuthDir = Join-Path $LocalDataDir "share\opencode"
+
+if (-not (Test-Path $TargetAuthDir)) {
+    New-Item -ItemType Directory -Force -Path $TargetAuthDir | Out-Null
+}
+
+# Check for auth.json in the current working directory or a secure master location
+if (Test-Path "$PSScriptRoot\auth.json") {
+    Write-Host "[INFO] Injecting secure LLM credentials for this session..." -ForegroundColor DarkGreen
+    Copy-Item -Path "$PSScriptRoot\auth.json" -Destination (Join-Path $TargetAuthDir "auth.json") -Force
+} else {
+    Write-Warning "[WARN] auth.json not found in the current folder. You may need to authenticate manually."
 }
 
 Write-Host "🚀 Starting OpenCode container: $ContainerName using image: $TargetImage" -ForegroundColor Green
