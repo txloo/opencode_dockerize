@@ -4,6 +4,15 @@ $ContainerName = "opencode-$($ProjectName.ToLower())"
 $LocalImageName = "opencode-local-$($ProjectName.ToLower())"
 
 # 2. Dynamic Image Verification & .dockerignore management
+# Ensure .gitignore excludes the persistent session dir
+if (-not (Test-Path ".gitignore")) {
+    Write-Host "📝 Creating missing .gitignore file..." -ForegroundColor DarkCyan
+    ".opencode_data/" | Out-File -FilePath ".gitignore" -Encoding utf8
+} elseif (-not (Get-Content ".gitignore" | Select-String -Pattern "\.opencode_data")) {
+    Write-Host "📝 Appending .opencode_data/ to existing .gitignore..." -ForegroundColor DarkCyan
+    Add-Content -Path ".gitignore" -Value "`n.opencode_data/"
+}
+
 if (Test-Path "Dockerfile") {
     Write-Host "🛠️ Project-level Dockerfile detected! Assembling workspace tools..." -ForegroundColor Cyan
     
