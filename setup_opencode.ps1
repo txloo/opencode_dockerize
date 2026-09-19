@@ -1,27 +1,28 @@
 # 1. Get project details for dynamic isolation names
 $ProjectName = (Get-Item .).Name
 $ContainerName = "opencode-$($ProjectName.ToLower())"
-$LocalImageName = "opencode-local-$($ProjectName.ToLower())"
 
 # 2. Dynamic Image Verification & .dockerignore management
-if (Test-Path "Dockerfile") {
-    Write-Host "🛠️ Project-level Dockerfile detected! Assembling workspace tools..." -ForegroundColor Cyan
-    
-    # Ensure .dockerignore exists to keep build context optimized
-    if (-not (Test-Path ".dockerignore")) {
-        Write-Host "📝 Creating missing .dockerignore file..." -ForegroundColor DarkCyan
-        ".opencode_data/" | Out-File -FilePath ".dockerignore" -Encoding utf8
-    } elseif (-not (Get-Content ".dockerignore" | Select-String -Pattern "\.opencode_data/")) {
-        Write-Host "📝 Appending .opencode_data/ to existing .dockerignore..." -ForegroundColor DarkCyan
-        Add-Content -Path ".dockerignore" -Value "`n.opencode_data/"
-    }
-
-    docker build -t $LocalImageName .
-    $TargetImage = $LocalImageName
-} else {
-    Write-Host "💡 No local Dockerfile found. Using the global OpenCode base image..." -ForegroundColor Yellow
-    $TargetImage = "custom-opencode:latest"
+# Ensure .gitignore excludes the persistent session dir
+if (-not (Test-Path ".gitignore")) {
+    Write-Host "📝 Creating missing .gitignore file..." -ForegroundColor DarkCyan
+    ".opencode_data/" | Out-File -FilePath ".gitignore" -Encoding utf8
+} elseif (-not (Get-Content ".gitignore" | Select-String -Pattern "\.opencode_data")) {
+    Write-Host "📝 Appending .opencode_data/ to existing .gitignore..." -ForegroundColor DarkCyan
+    Add-Content -Path ".gitignore" -Value "`n.opencode_data/"
 }
+
+# Ensure .dockerignore excludes the persistent session dir
+if (-not (Test-Path ".dockerignore")) {
+    Write-Host "📝 Creating missing .dockerignore file..." -ForegroundColor DarkCyan
+    ".opencode_data/" | Out-File -FilePath ".dockerignore" -Encoding utf8
+} elseif (-not (Get-Content ".dockerignore" | Select-String -Pattern "\.opencode_data/")) {
+    Write-Host "📝 Appending .opencode_data/ to existing .dockerignore..." -ForegroundColor DarkCyan
+    Add-Content -Path ".dockerignore" -Value "`n.opencode_data/"
+}
+
+Write-Host "💡 Using the global OpenCode base image..." -ForegroundColor Yellow
+$TargetImage = "custom-opencode:latest"
 
 # 3. Check if Windows SSH keys exist to mount them safely
 $SshDir = "$HOME\.ssh"
