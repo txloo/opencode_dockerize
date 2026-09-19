@@ -21,6 +21,19 @@ if (-not (Test-Path ".dockerignore")) {
     Add-Content -Path ".dockerignore" -Value "`n.opencode_data/"
 }
 
+# Ensure the container-env skill is installed for this project
+$SkillDir = Join-Path $PWD ".opencode\skills\container-env"
+$SkillDest = Join-Path $SkillDir "SKILL.md"
+if (Test-Path $SkillDest) {
+    Write-Host "[SKIP] container-env skill already installed, leaving local copy untouched." -ForegroundColor DarkCyan
+} elseif (Test-Path "$PSScriptRoot\container-env_SKILL.md") {
+    Write-Host "📝 Installing container-env skill into .opencode/skills/container-env/..." -ForegroundColor DarkCyan
+    New-Item -ItemType Directory -Force -Path $SkillDir | Out-Null
+    Copy-Item -Path "$PSScriptRoot\container-env_SKILL.md" -Destination $SkillDest -Force
+} else {
+    Write-Warning "[WARN] container-env_SKILL.md not found next to setup_opencode.ps1. Skill not installed."
+}
+
 Write-Host "💡 Using the global OpenCode base image..." -ForegroundColor Yellow
 $TargetImage = "custom-opencode:latest"
 
