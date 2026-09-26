@@ -2,39 +2,44 @@
 $ProjectName = (Get-Item .).Name
 $ContainerName = "opencode-$($ProjectName.ToLower())"
 
+# Parse arguments: the container-env skill is only imported when --skill is passed
+$InstallSkill = ($args -contains "--skill") -or ($args -contains "-skill")
+
 # 2. Dynamic Image Verification & .dockerignore management
 # Ensure .gitignore excludes the persistent session dir
 if (-not (Test-Path ".gitignore")) {
-    Write-Host "📝 Creating missing .gitignore file..." -ForegroundColor DarkCyan
+    Write-Host "[INFO] Creating missing .gitignore file..." -ForegroundColor DarkCyan
     ".opencode_data/" | Out-File -FilePath ".gitignore" -Encoding utf8
 } elseif (-not (Get-Content ".gitignore" | Select-String -Pattern "\.opencode_data")) {
-    Write-Host "📝 Appending .opencode_data/ to existing .gitignore..." -ForegroundColor DarkCyan
+    Write-Host "[INFO] Appending .opencode_data/ to existing .gitignore..." -ForegroundColor DarkCyan
     Add-Content -Path ".gitignore" -Value "`n.opencode_data/"
 }
 
 # Ensure .dockerignore excludes the persistent session dir
 if (-not (Test-Path ".dockerignore")) {
-    Write-Host "📝 Creating missing .dockerignore file..." -ForegroundColor DarkCyan
+    Write-Host "[INFO] Creating missing .dockerignore file..." -ForegroundColor DarkCyan
     ".opencode_data/" | Out-File -FilePath ".dockerignore" -Encoding utf8
 } elseif (-not (Get-Content ".dockerignore" | Select-String -Pattern "\.opencode_data/")) {
-    Write-Host "📝 Appending .opencode_data/ to existing .dockerignore..." -ForegroundColor DarkCyan
+    Write-Host "[INFO] Appending .opencode_data/ to existing .dockerignore..." -ForegroundColor DarkCyan
     Add-Content -Path ".dockerignore" -Value "`n.opencode_data/"
 }
 
-# Ensure the container-env skill is installed for this project
-$SkillDir = Join-Path $PWD ".opencode\skills\container-env"
-$SkillDest = Join-Path $SkillDir "SKILL.md"
-if (Test-Path $SkillDest) {
-    Write-Host "[SKIP] container-env skill already installed, leaving local copy untouched." -ForegroundColor DarkCyan
-} elseif (Test-Path "$PSScriptRoot\container-env_SKILL.md") {
-    Write-Host "📝 Installing container-env skill into .opencode/skills/container-env/..." -ForegroundColor DarkCyan
-    New-Item -ItemType Directory -Force -Path $SkillDir | Out-Null
-    Copy-Item -Path "$PSScriptRoot\container-env_SKILL.md" -Destination $SkillDest -Force
-} else {
-    Write-Warning "[WARN] container-env_SKILL.md not found next to setup_opencode.ps1. Skill not installed."
+# Install the container-env skill only when the --skill flag was passed
+if ($InstallSkill) {
+    $SkillDir = Join-Path $PWD ".opencode\skills\container-env"
+    $SkillDest = Join-Path $SkillDir "SKILL.md"
+    if (Test-Path $SkillDest) {
+        Write-Host "[SKIP] container-env skill already installed, leaving local copy untouched." -ForegroundColor DarkCyan
+    } elseif (Test-Path "$PSScriptRoot\container-env_SKILL.md") {
+        Write-Host "Installing container-env skill into .opencode/skills/container-env/..." -ForegroundColor DarkCyan
+        New-Item -ItemType Directory -Force -Path $SkillDir | Out-Null
+        Copy-Item -Path "$PSScriptRoot\container-env_SKILL.md" -Destination $SkillDest -Force
+    } else {
+        Write-Warning "[WARN] container-env_SKILL.md not found next to setup_opencode.ps1. Skill not installed."
+    }
 }
 
-Write-Host "💡 Using the global OpenCode base image..." -ForegroundColor Yellow
+Write-Host "[INFO] Using the global OpenCode base image..." -ForegroundColor Yellow
 $TargetImage = "custom-opencode:latest"
 
 # 3. Check if Windows SSH keys exist to mount them safely
@@ -65,7 +70,7 @@ if (Test-Path "$PSScriptRoot\auth.json") {
     Write-Warning "[WARN] auth.json not found in the current folder. You may need to authenticate manually."
 }
 
-Write-Host "🚀 Starting OpenCode container: $ContainerName using image: $TargetImage" -ForegroundColor Green
+Write-Host "[INFO] Starting OpenCode container: $ContainerName using image: $TargetImage" -ForegroundColor Green
 
 # 5. Run the customized infrastructure stack
 docker run -it --rm `
